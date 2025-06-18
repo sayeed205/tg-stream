@@ -27,6 +27,7 @@
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",
     "#jobs/*": "./app/jobs/*.js",
+    "#utils/*": "./app/utils/*.js",
     "#database/*": "./database/*.js",
     "#tests/*": "./tests/*.js",
     "#start/*": "./start/*.js",
@@ -75,7 +76,8 @@
     "luxon": "^3.6.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "tmdb-ts": "^2.0.1"
   },
   "hotHook": {
     "boundaries": [

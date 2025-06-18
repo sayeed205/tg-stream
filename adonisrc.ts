@@ -60,6 +60,7 @@ export default defineConfig({
     () => import('adonis-resque/providers/resque_provider'),
     () => import('@adonisjs/redis/redis_provider'),
     () => import('#providers/tg_provider'),
+    () => import('#providers/tg_logger_provider')
   ],
 
   /*

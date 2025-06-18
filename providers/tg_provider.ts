@@ -1,10 +1,11 @@
-import { Dispatcher } from '@mtcute/dispatcher'
+import { Dispatcher, filters } from '@mtcute/dispatcher'
 import { TelegramClient } from '@mtcute/node'
-import logger from '@adonisjs/core/services/logger'
 
 import type { ApplicationService } from '@adonisjs/core/types'
 
 import env from '#start/env'
+import logger from '@adonisjs/core/services/logger'
+import { parseMediaInfo } from '#utils/media'
 
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {
@@ -43,18 +44,21 @@ export default class TgProvider {
   async start() {
     const { tg } = await this.app.container.make('tg')
     const self = await tg.start({ botToken: env.get('TG_MAIN_BOT_TOKEN') })
-    logger.info(`Logged in Telegram as '${self.displayName}'`)
 
-    const logChannelPeer = await tg.resolvePeer(env.get('TG_LOG_CHANNEL'))
-    const logChannel = await tg.resolveChannel(logChannelPeer)
+    const tgLogger = await this.app.container.make('tg:logger')
 
-    await tg.sendText(logChannel, `Logged in Telegram as '${self.displayName}'`)
+    await tgLogger.info(`Logged in Telegram as '${self.displayName}'`)
   }
 
   /**
    * The process has been started
    */
-  async ready() {}
+  async ready() {
+    const { dp } = await this.app.container.make('tg')
+    dp.onNewMessage(filters.media, async (ctx) => {
+      logger.info(parseMediaInfo(ctx.text))
+    })
+  }
 
   /**
    * Preparing to shut down the app
