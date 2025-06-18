@@ -24,4 +24,16 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   */
   SESSION_DRIVER: Env.schema.enum(['cookie', 'memory'] as const),
+
+  TG_API_ID: Env.schema.number(),
+
+  TG_API_HASH: Env.schema.string(),
+
+  TG_MAIN_BOT_TOKEN: Env.schema.string(),
+
+  REDIS_HOST: Env.schema.string({ format: 'host' }),
+  REDIS_PORT: Env.schema.number(),
+  REDIS_PASSWORD: Env.schema.string.optional(),
+
+  TG_LOG_CHANNEL: Env.schema.number()
 })
