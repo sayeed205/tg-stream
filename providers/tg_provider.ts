@@ -4,8 +4,6 @@ import { TelegramClient } from '@mtcute/node'
 import type { ApplicationService } from '@adonisjs/core/types'
 
 import env from '#start/env'
-import logger from '@adonisjs/core/services/logger'
-import { parseMediaInfo } from '#utils/media'
 
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {
@@ -27,6 +25,7 @@ export default class TgProvider {
       const tg = new TelegramClient({
         apiId: env.get('TG_API_ID'),
         apiHash: env.get('TG_API_HASH'),
+        enableErrorReporting: true,
       })
       const dp = Dispatcher.for(tg)
       return { tg, dp }
@@ -44,9 +43,7 @@ export default class TgProvider {
   async start() {
     const { tg } = await this.app.container.make('tg')
     const self = await tg.start({ botToken: env.get('TG_MAIN_BOT_TOKEN') })
-
     const tgLogger = await this.app.container.make('tg:logger')
-
     await tgLogger.info(`Logged in Telegram as '${self.displayName}'`)
   }
 
@@ -56,7 +53,9 @@ export default class TgProvider {
   async ready() {
     const { dp } = await this.app.container.make('tg')
     dp.onNewMessage(filters.media, async (ctx) => {
-      logger.info(parseMediaInfo(ctx.text))
+      // logger.info(parseMediaInfo(ctx.text))
+      console.log(JSON.stringify(ctx, null, 2))
+      ctx.link
     })
   }
 

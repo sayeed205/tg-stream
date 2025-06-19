@@ -53,6 +53,7 @@
     "prettier": "^3.5.3",
     "ts-node-maintained": "^10.9.5",
     "typescript": "~5.8.3",
+    "video.js": "^8.23.3",
     "vite": "^6.3.5"
   },
   "dependencies": {
@@ -71,9 +72,12 @@
     "@mtcute/node": "^0.24.0",
     "@vinejs/vine": "^3.0.1",
     "adonis-resque": "^2.0.2",
+    "artplayer": "^5.2.3",
     "better-sqlite3": "^11.10.0",
     "edge.js": "^6.2.1",
+    "lucide-react": "^0.517.0",
     "luxon": "^3.6.1",
+    "motion": "^12.18.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "reflect-metadata": "^0.2.2",
