@@ -1,6 +1,6 @@
 import type HomeController from '#controllers/home_controller'
 import { InferPageProps } from '@adonisjs/inertia/types'
-import { Head, Link } from '@inertiajs/react'
+import { Head, Link, usePage } from '@inertiajs/react'
 import { DateTime } from 'luxon'
 import { useEffect, useRef, useState } from 'react'
 import { Icons } from '~/components/icons'
@@ -11,23 +11,27 @@ import { cn } from '~/lib/utils'
 export default function Home({ recentMovies }: InferPageProps<HomeController, 'index'>) {
   const mediaItems = recentMovies ?? []
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [isHovering, setIsHovering] = useState(false)
+  const [isHovering, setIsHovering] = useState(false) // Keep for existing logic for main carousel
   const [progress, setProgress] = useState(0)
 
-  const progressInterval = useRef<NodeJS.Timeout | null>(null)
-  const slideInterval = useRef<NodeJS.Timeout | null>(null)
-
-  const slideStartTime = useRef<number>(Date.now())
-  const resumeTimeout = useRef<NodeJS.Timeout | null>(null)
-
-  const savedElapsed = useRef<number>(0)
+  const { url } = usePage()
+  // State for the "Recently Added" section - using ref for scrolling
+  const carouselRef = useRef<HTMLDivElement>(null)
 
   const SLIDE_DURATION = 6000
   const PROGRESS_UPDATE_INTERVAL = 100
 
+  const progressInterval = useRef<NodeJS.Timeout | null>(null)
+  const slideInterval = useRef<NodeJS.Timeout | null>(null)
+  const slideStartTime = useRef<number>(Date.now())
+  const resumeTimeout = useRef<NodeJS.Timeout | null>(null)
+  const savedElapsed = useRef<number>(0)
+
+  // Main Carousel Logic
   const goToSlide = (index: number) => {
     setCurrentIndex(index)
     setProgress(0)
+    slideStartTime.current = Date.now()
   }
 
   const nextSlide = () => {
@@ -39,6 +43,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
     setProgress(0)
+    slideStartTime.current = Date.now()
   }
 
   // Progress bar control
@@ -58,17 +63,14 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
 
   // Slide control
   const startAutoSlide = () => {
-    // Clear any pending timeouts or intervals
     clearInterval(slideInterval.current!)
     clearTimeout(resumeTimeout.current!)
 
     const elapsed = Date.now() - slideStartTime.current
     const remaining = SLIDE_DURATION - elapsed
 
-    // Schedule next slide using remaining time
     resumeTimeout.current = setTimeout(() => {
       nextSlide()
-      // After sliding, start normal interval again
       slideInterval.current = setInterval(() => {
         nextSlide()
       }, SLIDE_DURATION)
@@ -80,6 +82,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
     clearTimeout(resumeTimeout.current!)
   }
 
+  // Effect for Main Carousel
   useEffect(() => {
     if (mediaItems.length === 0) return
 
@@ -97,6 +100,42 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
     }
   }, [isHovering, mediaItems.length])
 
+  // Recently Added Carousel Logic
+  const itemsPerPage = 6 // Number of items to show per slide in the recently added section
+
+  const nextRecentMovies = () => {
+    if (!carouselRef.current) return
+    // Assuming each card has w-40 (160px) and mr-4 (16px), total item width is 176px
+    const itemFullWidth = 160 + 16
+    const scrollAmount = itemFullWidth * itemsPerPage
+    carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' })
+  }
+
+  const prevRecentMovies = () => {
+    if (!carouselRef.current) return
+    const itemFullWidth = 160 + 16
+    const scrollAmount = itemFullWidth * itemsPerPage
+    carouselRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    const el = carouselRef.current
+    if (!el) return
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.shiftKey && e.deltaY !== 0) {
+        e.preventDefault()
+        el.scrollBy({ left: e.deltaY, behavior: 'smooth' })
+      }
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: false })
+
+    return () => {
+      el.removeEventListener('wheel', handleWheel)
+    }
+  }, [])
+
   return (
     <>
       <Head>
@@ -105,42 +144,69 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
           content="tg-stream: Your one stop destination for all Media needs."
         />
       </Head>
-      <div className="relative min-h-svh bg-black text-white">
-        {' '}
-        {/* Full height background */}
+      <div className="relative bg-background text-foreground">
         {/* Header */}
         <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-6">
-          <nav className="flex items-center gap-1">
-            <Button asChild variant="ghost" size="icon" className="rounded-full">
-              <Link href="/" className="text-lg font-semibold">
-                <Icons.house />
+          <nav className="relative flex h-10 items-center rounded-full bg-background/20 p-1 shadow-md backdrop-blur-md">
+            {/* Home button */}
+            <button
+              className={cn(
+                'relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                url === '/' // Check if current URL is home path
+                  ? 'bg-primary text-primary-foreground' // Active state classes
+                  : 'text-muted-foreground hover:text-foreground' // Inactive state classes
+              )}
+            >
+              <Link href="/" aria-label="Home">
+                <Icons.house className="h-4 w-4" /> {/* Smaller icon size */}
               </Link>
-            </Button>
-            <Button asChild variant="ghost" size="icon" className="rounded-full">
-              <Link href="/movies" className="text-lg font-semibold">
-                <Icons.film />
+            </button>
+
+            {/* Movies button */}
+            <button
+              className={cn(
+                'relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                url.startsWith('/movies')
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Link href="/movies" aria-label="Movies">
+                <Icons.film className="h-4 w-4" />
               </Link>
-            </Button>
-            <Button asChild variant="ghost" size="icon" className="rounded-full">
-              <Link href="/shows" className="text-lg font-semibold">
-                <Icons.tv />
+            </button>
+
+            {/* Shows button */}
+            <button
+              className={cn(
+                'relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                url.startsWith('/shows') // Check if current URL starts with /shows
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <Link href="/shows" aria-label="TV Shows">
+                <Icons.tv className="h-4 w-4" />
               </Link>
-            </Button>
+            </button>
           </nav>
+          {/* <ThemeSwitcher /> */}
           <div className="flex items-center gap-4">
             <Button asChild variant="ghost" size="icon" className="rounded-full">
               <Link href="/search" className="text-lg font-semibold">
                 <Icons.search />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+            {/* Using text-foreground for button icons where applicable based on theme */}
+            <Button variant="ghost" size="icon" className="text-foreground hover:bg-white/20">
               <Icons.user className="h-5 w-5" />
             </Button>
           </div>
         </header>
-        {/* Carousel */}
+
+        {/* Main Carousel */}
         <div
-          className="relative h-svh overflow-hidden"
+          className="relative h-[calc(100dvh-2rem)] overflow-hidden"
           onMouseEnter={() => {
             setIsHovering(true)
             savedElapsed.current = Date.now() - slideStartTime.current
@@ -158,11 +224,11 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
           >
             {mediaItems.map((item) => {
               const itemBg = 'https://image.tmdb.org/t/p/original' + item.backdrop
-              const logo = item.logo ? 'https://image.tmdb.org/t/p/w500/' + item.logo : '' // Retain logo logic
+              const logo = item.logo ? 'https://image.tmdb.org/t/p/w500/' + item.logo : ''
 
               return (
                 <div
-                  key={item.Id} // Assuming 'Id' is the unique identifier for each media item
+                  key={item.Id}
                   className="min-w-full h-full relative flex-shrink-0"
                   style={{
                     backgroundImage: `url(${itemBg})`,
@@ -170,13 +236,10 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                     backgroundPosition: 'center',
                   }}
                 >
-                  {/* Dark gradient overlay similar to the image */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+                  {/* Using custom variables for gradients */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
                   <div className="absolute inset-0 flex flex-col justify-end p-20 pb-24">
-                    {' '}
-                    {/* Increased padding to match image */}
                     <div className="max-w-2xl">
-                      {/* Conditional rendering for logo or title */}
                       {logo ? (
                         <div
                           className="w-full h-20 bg-contain bg-no-repeat bg-left mb-2"
@@ -189,26 +252,19 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                       )}
 
                       <div className="flex items-center gap-4 mb-4">
-                        {' '}
-                        {/* Increased gap */}
                         <Badge
-                          variant="outline"
-                          className="bg-destructive text-background border-primary text-base font-bold"
+                          variant="secondary"
+                          className="bg-destructive text-background text-base font-bold"
                         >
-                          {' '}
-                          {/* Styling similar to image */}
                           HD
                         </Badge>
-                        {item.voteAverage > 0 && ( // Display voteAverage if available and greater than 0
+                        {item.voteAverage > 0 && (
                           <span className="text-lg text-muted-foreground flex items-center gap-1">
-                            {' '}
-                            {/* Adjust text size */}
                             <Icons.star className="h-4 w-4 text-yellow-400" />{' '}
                             {item.voteAverage.toFixed(1)}/10
                           </span>
                         )}
                         <span className="text-lg text-muted-foreground">
-                          {' '}
                           {DateTime.fromISO(item.releaseDate).year}
                         </span>
                         {item.runtime && (
@@ -233,14 +289,18 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                         {item.overview}
                       </p>
                       <div className="flex items-center gap-4">
-                        <Button className="gap-2 p-6 w-[20%] text-lg rounded-full">
-                          <Icons.play /> Play
+                        <Button
+                          className="gap-2 p-6 w-[20%] text-lg rounded-full bg-foreground/20 backdrop-blur-md
+             hover:bg-foreground/50 shadow-xl hover:shadow-2xl
+             transition-all duration-300 transform hover:-translate-y-1"
+                        >
+                          <Icons.play className="fill-destructive text-destructive" /> Play
                         </Button>
                         <Button
                           asChild
                           variant="secondary"
                           size="icon"
-                          className="p-6 rounded-full"
+                          className="p-6 rounded-full backdrop-blur-md bg-secondary/20 hover:bg-secondary/50"
                         >
                           <Link href={`/movies/${item.id}`}>
                             <Icons.info className="text-foreground" />
@@ -254,7 +314,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
             })}
           </div>
 
-          {/* Navigation Arrows */}
+          {/* Navigation Arrows for Main Carousel */}
           <Button
             variant="ghost"
             size="icon"
@@ -280,8 +340,8 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                 className={cn(
                   'h-2 rounded-full transition-all relative overflow-hidden ',
                   index === currentIndex
-                    ? 'w-12 bg-card' // Active indicator color changed to white
-                    : 'w-2 bg-muted-foreground hover:bg-muted-foreground/50 cursor-pointer' // Inactive indicator color
+                    ? 'w-12 bg-card' // Using bg-card for active indicator
+                    : 'w-2 bg-muted-foreground hover:bg-muted-foreground/50 cursor-pointer'
                 )}
                 onClick={() => goToSlide(index)}
               >
@@ -295,6 +355,69 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                 )}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Recently Added Movies Section */}
+        <div className="p-8 mt-4">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <span className="text-destructive">•</span> Recently Added in Movies{' '}
+              <span className="text-destructive">•</span>
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full h-8 w-8 text-foreground hover:bg-foreground/20"
+                onClick={prevRecentMovies}
+              >
+                <Icons.chevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full h-8 w-8 text-foreground hover:bg-foreground/20"
+                onClick={nextRecentMovies}
+              >
+                <Icons.chevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          <div ref={carouselRef} className="flex overflow-x-hidden scroll-smooth pb-4 no-scrollbar">
+            {[
+              ...recentMovies,
+              ...recentMovies,
+              ...recentMovies,
+              ...recentMovies,
+              ...recentMovies,
+              ...recentMovies,
+            ].map((item, index) => {
+              const poster = 'https://image.tmdb.org/t/p/w300/' + item.poster
+              return (
+                <div
+                  key={`${item.Id}-${index}`}
+                  className="flex-shrink-0 w-40 mr-4 group rounded-md overflow-hidden shadow-lg"
+                >
+                  <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg transform transition-transform duration-300 group-hover:scale-105">
+                    <img src={poster} alt={item.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)]/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                      <Button
+                        size="icon"
+                        className="rounded-full h-10 w-10 bg-destructive backdrop-blur-sm text-background hover:bg-destructive/80"
+                      >
+                        <Icons.play className="h-5 w-5 fill-current" />
+                      </Button>
+                    </div>
+                  </div>
+                  <h3 className="mt-3 text-lg font-semibold truncate">{item.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {DateTime.fromISO(item.releaseDate).year}
+                  </p>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
