@@ -37,5 +37,7 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   TG_LOG_CHANNEL: Env.schema.number(),
 
-  TG_MEDIA_CHANNEL: Env.schema.number()
+  TG_MEDIA_CHANNEL: Env.schema.number(),
+
+  DATABASE_URL: Env.schema.string()
 })
