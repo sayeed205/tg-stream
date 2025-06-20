@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icons } from '~/components/icons'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
+import { Card } from '~/components/ui/card'
 import { cn } from '~/lib/utils'
 
 export default function Home({ recentMovies }: InferPageProps<HomeController, 'index'>) {
@@ -385,7 +386,10 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
             </div>
           </div>
 
-          <div ref={carouselRef} className="flex overflow-x-hidden scroll-smooth pb-4 no-scrollbar">
+          <div
+            ref={carouselRef}
+            className="flex gap-4 overflow-x-hidden scroll-smooth pb-4 no-scrollbar"
+          >
             {[
               ...recentMovies,
               ...recentMovies,
@@ -396,26 +400,42 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
             ].map((item, index) => {
               const poster = 'https://image.tmdb.org/t/p/w300/' + item.poster
               return (
-                <div
+                <Card
                   key={`${item.Id}-${index}`}
-                  className="flex-shrink-0 w-40 mr-4 group rounded-md overflow-hidden shadow-lg"
+                  className="flex-shrink-0 w-56 group rounded-md overflow-hidden shadow-lg items-center gap-0 py-3 cursor-pointer"
                 >
-                  <div className="relative w-full h-60 rounded-lg overflow-hidden shadow-lg transform transition-transform duration-300 group-hover:scale-105">
+                  <Link
+                    href={`/movies/${item.id}`}
+                    className="relative w-[90%] h-80 rounded-lg overflow-hidden shadow-lg transform transition-transform duration-300 group-hover:scale-103"
+                  >
                     <img src={poster} alt={item.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)]/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+
+                    <div className="absolute top-2 left-2 bg-secondary/20 backdrop-blur-md text-xs px-2 py-1 rounded-md z-10">
+                      {DateTime.fromISO(item.releaseDate).year}
+                    </div>
+
+                    {item.voteAverage > 0 && (
+                      <div className="absolute top-2 right-2  bg-secondary/20 backdrop-blur-md text-xs px-2 py-1 rounded-md z-10 flex items-center gap-1">
+                        <Icons.star className="h-4 w-4 text-destructive" />{' '}
+                        {item.voteAverage.toFixed(1)}/10
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-background)]/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                       <Button
                         size="icon"
-                        className="rounded-full h-10 w-10 bg-destructive backdrop-blur-sm text-background hover:bg-destructive/80"
+                        className="rounded-full h-10 w-10 bg-destructive backdrop-blur-sm text-background hover:bg-destructive/80 self-start"
+                        asChild
                       >
-                        <Icons.play className="h-5 w-5 fill-current" />
+                        <Link href={`/movies/${item.id}/play`}>
+                          <Icons.play className="h-5 w-5 fill-current" />
+                        </Link>
                       </Button>
+                      <div className="mt-2">
+                        <h3 className="text-sm font-semibold text-white truncate">{item.title}</h3>
+                      </div>
                     </div>
-                  </div>
-                  <h3 className="mt-3 text-lg font-semibold truncate">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {DateTime.fromISO(item.releaseDate).year}
-                  </p>
-                </div>
+                  </Link>
+                </Card>
               )
             })}
           </div>
