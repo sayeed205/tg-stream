@@ -1,6 +1,9 @@
+import { Image } from 'tmdb-ts'
+
 type ParsedMedia = {
   title: string
   year: number
+  type: 'movie' | 'tv'
   season?: number
   episode?: number
 }
@@ -16,7 +19,20 @@ export function parseMediaInfo(input: string): ParsedMedia | null {
   return {
     title: rawTitle.trim(),
     year: Number.parseInt(yearStr),
+    type: seasonStr ? 'tv' : 'movie',
     season: seasonStr ? Number.parseInt(seasonStr) : undefined,
     episode: episodeStr ? Number.parseInt(episodeStr) : undefined,
   }
+}
+
+export function getImage(images: Image[]): string {
+  if (!images.length) return ''
+  return (
+    images.find((image) => {
+      if (image.iso_639_1 === 'en' || image.iso_639_1 === 'in') {
+        return true
+      }
+      return true
+    })?.file_path || ''
+  )
 }

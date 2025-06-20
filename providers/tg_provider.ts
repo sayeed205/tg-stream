@@ -3,6 +3,7 @@ import { TelegramClient } from '@mtcute/node'
 
 import type { ApplicationService } from '@adonisjs/core/types'
 
+import TGJob from '#jobs/tg'
 import env from '#start/env'
 
 declare module '@adonisjs/core/types' {
@@ -53,9 +54,8 @@ export default class TgProvider {
   async ready() {
     const { dp } = await this.app.container.make('tg')
     dp.onNewMessage(filters.media, async (ctx) => {
-      // logger.info(parseMediaInfo(ctx.text))
-      console.log(JSON.stringify(ctx, null, 2))
-      ctx.link
+      if (ctx.media.type === 'document' || ctx.media.type === 'video')
+        await TGJob.enqueue({ text: ctx.text, media: ctx.media })
     })
   }
 

@@ -59,8 +59,11 @@ export default defineConfig({
     () => import('@adonisjs/inertia/inertia_provider'),
     () => import('adonis-resque/providers/resque_provider'),
     () => import('@adonisjs/redis/redis_provider'),
-    () => import('#providers/tg_provider'),
-    () => import('#providers/tg_logger_provider')
+    {
+      file: () => import('#providers/tg_provider'),
+      environment: ['web'],
+    },
+    () => import('#providers/tg_logger_provider'),
   ],
 
   /*

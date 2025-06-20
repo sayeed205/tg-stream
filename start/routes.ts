@@ -7,7 +7,9 @@
 |
 */
 
+import Movie from '#models/movie'
 import router from '@adonisjs/core/services/router'
+import db from '@adonisjs/lucid/services/db'
 
 // const { tg } = await app.container.make('tg')
 // const tgVideo = await tg.getMessageByLink('https://t.me/c/2437460318/83')
@@ -177,3 +179,33 @@ import router from '@adonisjs/core/services/router'
 // })
 
 router.on('/').renderInertia('home')
+
+router.get('/:query', async ({ params, response }) => {
+  const rawQuery = params.query?.trim()
+  if (!rawQuery) {
+    return response.badRequest({ error: 'Query is required' })
+  }
+
+  // Add prefix operator for autocomplete behavior
+  const tsQuery = `${rawQuery}:*`
+
+  const results = await Movie.query()
+    .select('*')
+    .select(db.raw(`ts_rank_cd(search_vector, to_tsquery('english', ?)) AS rank`, [tsQuery]))
+    .whereRaw(`search_vector @@ to_tsquery('english', ?)`, [tsQuery])
+    .orWhere('title', 'ilike', `%${rawQuery}%`)
+    .orWhere('original_title', 'ilike', `%${rawQuery}%`)
+    .orWhere('overview', 'ilike', `%${rawQuery}%`)
+    .orWhere('tagline', 'ilike', `%${rawQuery}%`)
+    .orWhere('genres', '&&', [rawQuery])
+    .orWhere('production_countries', '&&', [rawQuery])
+    .orderByRaw('rank DESC')
+    .orderBy('title')
+    .limit(10)
+
+  return response.json({
+    query: rawQuery,
+    count: results.length,
+    results,
+  })
+})

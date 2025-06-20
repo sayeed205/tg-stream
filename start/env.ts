@@ -39,5 +39,7 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   TG_MEDIA_CHANNEL: Env.schema.number(),
 
-  DATABASE_URL: Env.schema.string()
+  DATABASE_URL: Env.schema.string(),
+
+  TMDB_API_KEY: Env.schema.string(),
 })

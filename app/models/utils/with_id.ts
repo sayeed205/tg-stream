@@ -12,7 +12,7 @@ type ModelWithCUIDClass<
   new (...args: any[]): ModelWithCUIDRow
 }
 
-export default function withCUID() {
+export default function withID() {
   return <T extends NormalizeConstructor<typeof BaseModel>>(
     superclass: T
   ): ModelWithCUIDClass<T> => {
