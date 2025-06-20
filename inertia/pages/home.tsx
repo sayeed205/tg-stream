@@ -119,24 +119,6 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
     carouselRef.current.scrollBy({ left: -scrollAmount, behavior: 'smooth' })
   }
 
-  useEffect(() => {
-    const el = carouselRef.current
-    if (!el) return
-
-    const handleWheel = (e: WheelEvent) => {
-      if (e.shiftKey && e.deltaY !== 0) {
-        e.preventDefault()
-        el.scrollBy({ left: e.deltaY, behavior: 'smooth' })
-      }
-    }
-
-    el.addEventListener('wheel', handleWheel, { passive: false })
-
-    return () => {
-      el.removeEventListener('wheel', handleWheel)
-    }
-  }, [])
-
   return (
     <>
       <Head>
@@ -153,13 +135,13 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
             <button
               className={cn(
                 'relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors',
-                url === '/' // Check if current URL is home path
-                  ? 'bg-primary text-primary-foreground' // Active state classes
-                  : 'text-muted-foreground hover:text-foreground' // Inactive state classes
+                url === '/'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               <Link href="/" aria-label="Home">
-                <Icons.house className="h-4 w-4" /> {/* Smaller icon size */}
+                <Icons.house className="h-4 w-4" />
               </Link>
             </button>
 
@@ -181,7 +163,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
             <button
               className={cn(
                 'relative z-10 flex h-8 w-8 items-center justify-center rounded-full transition-colors',
-                url.startsWith('/shows') // Check if current URL starts with /shows
+                url.startsWith('/shows')
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               )}
@@ -198,7 +180,6 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                 <Icons.search />
               </Link>
             </Button>
-            {/* Using text-foreground for button icons where applicable based on theme */}
             <Button variant="ghost" size="icon" className="text-foreground hover:bg-white/20">
               <Icons.user className="h-5 w-5" />
             </Button>
@@ -237,7 +218,6 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                     backgroundPosition: 'center',
                   }}
                 >
-                  {/* Using custom variables for gradients */}
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
                   <div className="absolute inset-0 flex flex-col justify-end p-20 pb-24">
                     <div className="max-w-2xl">
@@ -341,7 +321,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                 className={cn(
                   'h-2 rounded-full transition-all relative overflow-hidden ',
                   index === currentIndex
-                    ? 'w-12 bg-card' // Using bg-card for active indicator
+                    ? 'w-12 bg-card'
                     : 'w-2 bg-muted-foreground hover:bg-muted-foreground/50 cursor-pointer'
                 )}
                 onClick={() => goToSlide(index)}
@@ -360,12 +340,9 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
         </div>
 
         {/* Recently Added Movies Section */}
-        <div className="p-8 mt-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              <span className="text-destructive">•</span> Recently Added in Movies{' '}
-              <span className="text-destructive">•</span>
-            </h2>
+        <div className="mt-10">
+          <div className="flex items-center justify-between mb-6 px-6">
+            <h2 className="text-2xl font-bold flex items-center gap-3">Recently Added in Movies</h2>
             <div className="flex gap-2">
               <Button
                 variant="ghost"
@@ -388,7 +365,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
 
           <div
             ref={carouselRef}
-            className="flex gap-4 overflow-x-hidden scroll-smooth pb-4 no-scrollbar"
+            className="flex gap-4 overflow-x-auto scroll-smooth pb-4 no-scrollbar snap-x snap-mandatory touch-pan-x ml-6"
           >
             {[
               ...recentMovies,
