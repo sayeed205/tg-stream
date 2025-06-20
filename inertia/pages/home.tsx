@@ -105,7 +105,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
           content="tg-stream: Your one stop destination for all Media needs."
         />
       </Head>
-      <div className="relative min-h-screen bg-black text-white">
+      <div className="relative min-h-svh bg-black text-white">
         {' '}
         {/* Full height background */}
         {/* Header */}
@@ -140,7 +140,7 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
         </header>
         {/* Carousel */}
         <div
-          className="relative h-screen overflow-hidden"
+          className="relative h-svh overflow-hidden"
           onMouseEnter={() => {
             setIsHovering(true)
             savedElapsed.current = Date.now() - slideStartTime.current
@@ -219,34 +219,32 @@ export default function Home({ recentMovies }: InferPageProps<HomeController, 'i
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-6">
-                        {' '}
                         {item.genres?.map((genre: string) => (
                           <Badge
                             key={genre}
                             variant="secondary"
                             className=" text-base rounded-full"
                           >
-                            {' '}
-                            {/* Larger badge */}
                             {genre}
                           </Badge>
                         ))}
                       </div>
                       <p className="text-muted-foreground text-lg mb-8 line-clamp-3">
-                        {' '}
                         {item.overview}
                       </p>
                       <div className="flex items-center gap-4">
-                        {' '}
                         <Button className="gap-2 p-6 w-[20%] text-lg rounded-full">
-                          {' '}
-                          <Icons.play className="h-5 w-5 " /> Play
+                          <Icons.play /> Play
                         </Button>
-                        <Button variant="destructive" size="icon" className="p-6 rounded-full">
-                          <Icons.heart className="text-background" />
-                        </Button>
-                        <Button variant="secondary" size="icon" className="p-6 rounded-full">
-                          <Icons.info className="text-foreground" />
+                        <Button
+                          asChild
+                          variant="secondary"
+                          size="icon"
+                          className="p-6 rounded-full"
+                        >
+                          <Link href={`/movies/${item.id}`}>
+                            <Icons.info className="text-foreground" />
+                          </Link>
                         </Button>
                       </div>
                     </div>
