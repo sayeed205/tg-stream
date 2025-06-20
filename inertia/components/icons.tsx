@@ -1,0 +1,46 @@
+import {
+  ChevronLeft,
+  ChevronRight,
+  CirclePlay,
+  Film,
+  Heart,
+  House,
+  Info,
+  Laptop,
+  Library,
+  LogIn,
+  Moon,
+  Play,
+  Plus,
+  Search,
+  Star,
+  Sun,
+  Trash,
+  Tv,
+  User,
+} from 'lucide-react'
+
+export const Icons = {
+  logo: CirclePlay,
+  sun: Sun,
+  moon: Moon,
+  laptop: Laptop,
+  plus: Plus,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
+  trash: Trash,
+  login: LogIn,
+  play: Play,
+  heart: Heart,
+  info: Info,
+
+  film: Film,
+  library: Library,
+  tv: Tv,
+
+  search: Search,
+  user: User,
+  star: Star,
+
+  house: House,
+}

@@ -178,7 +178,8 @@ import db from '@adonisjs/lucid/services/db'
 //   return inertia.render('home', { mime: mimeType })
 // })
 
-router.on('/').renderInertia('home')
+const HomeController = () => import('#controllers/home_controller')
+router.get('/', [HomeController, 'index'])
 
 router.get('/:query', async ({ params, response }) => {
   const rawQuery = params.query?.trim()
